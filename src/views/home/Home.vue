@@ -3,85 +3,20 @@
         <nav-bar class="home-nav">
             <div  slot="center">购物街</div>
         </nav-bar>
-        <home-swiper :banners="banners"></home-swiper>
-        <recommend-view :recommends="recommends"></recommend-view>
-        <feature-view></feature-view>
-        <tab-control :titles="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"></tab-control>
-        <goods-list :goods="showGoods"></goods-list>
-        <ul>
-        <li>1</li>
-        <li>2</li>
-        <li>3</li>
-        <li>4</li>
-        <li>5</li>
-        <li>6</li>
-        <li>7</li>
-        <li>8</li>
-        <li>9</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-        <li>10</li>
-    </ul>
+        <scroll class="content" 
+                ref="scroll" 
+                :probe-type="3" 
+                :pull-up-load="true"
+                @scroll="contentScroll" 
+                @pullingUp="loadMore">
+            <home-swiper :banners="banners"></home-swiper>
+            <recommend-view :recommends="recommends"></recommend-view>
+            <feature-view></feature-view>
+            <tab-control :titles="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"></tab-control>
+            <goods-list :goods="showGoods" class="goods-list"></goods-list>
+        </scroll>
+        <!-- native修饰符：当我们需要监听一个组件的原生事件时，必须给对应的事件加上native修饰符 -->
+        <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
     </div>
     
 
@@ -95,8 +30,11 @@ import GoodsList from "components/content/goods/GoodsList"
 import HomeSwiper from './childComps/HomeSwiper'
 import RecommendView from './childComps/RecommendView'
 import FeatureView from "./childComps/FeatureView";
+import Scroll from 'components/common/scroll/Scroll';
+import BackTop from 'components/content/backTop/BackTop';
 
 import {getHomeMultidata,getHomeGoods} from 'network/home';
+
 
 
 export default {
@@ -109,7 +47,8 @@ export default {
         HomeSwiper,
         RecommendView,
         FeatureView,
-
+        Scroll,
+        BackTop
     },
     data(){
         return {
@@ -120,14 +59,15 @@ export default {
                 'new':{page:0,list:[]},
                 'sell':{page:0,list:[]}
             },
-            currentType:'pop'
+            currentType:'pop',
+            isShowBackTop:false
         }
     },
     computed:{
         showGoods(){
             return this.goods[this.currentType].list
         }
-        },
+    },
     created(){
         // 1.请求多个数据
         this.getHomeMultidata()
@@ -151,10 +91,21 @@ export default {
                case 2:
                    this.currentType='sell'
                    break;
-           
                default:
                    break;
            }
+        },
+        backClick(){
+            this.$refs.scroll.scrollTo(0,0,500)
+        },
+        contentScroll(position){
+            position.y = -position.y
+            this.isShowBackTop = position.y>1000?true:false
+        },
+        loadMore(){
+            this.getHomeGoods(this.currentType);
+            // this.$refs.scroll.scroll.refresh()
+            
         },
 
         /**
@@ -174,14 +125,19 @@ export default {
                 this.goods[type].list.push(...res.data.list);
                 // 每次请求完，页面+1
                 this.goods[type].page+=1;
-            })
+                // 下拉加载更多
+                this.$refs.scroll.finishPullUp();
+                // this.$refs.scroll.scroll.finishPullUp();
+            });
         }
     },
 }
 </script>
 <style scoped>
 #home{
-    padding-top: 44px;
+    /* padding-top: 44px; */
+    height: 100vh;
+    position: relative;
 }
 .home-nav{
     background-color: var(--color-tint);
@@ -196,5 +152,16 @@ export default {
     position: sticky;
     top: 44px;
     z-index: 8;
+}
+.goods-list{
+    margin-bottom: 49px;
+}
+.content{
+    position: absolute;
+    overflow: hidden;
+    top: 44px;
+    bottom: 49px;
+    right: 0px;
+    left: 0px;
 }
 </style>
