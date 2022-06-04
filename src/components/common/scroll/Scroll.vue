@@ -41,17 +41,17 @@ export default {
 
         // 3.监听上拉加载更多
         this.scroll.on('pullingUp',()=>{
-            this.$emit('pullingUp')
+            this.$emit('pullingUp');
+            this.scroll.finishPullUp();
         })
     },
     methods:{
         scrollTo(x,y,time=300){
             this.scroll.scrollTo(x,y,time)
         },
-        finishPullUp(){
-            console.log('上拉加载更多2');
-            this.scroll.finishPullUp();
-        }
+        // finishPullUp(){
+        //     this.scroll.finishPullUp();
+        // }
     },
 }
 </script>

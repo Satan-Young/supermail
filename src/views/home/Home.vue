@@ -6,8 +6,8 @@
         <scroll class="content" 
                 ref="scroll" 
                 :probe-type="3" 
-                :pull-up-load="true"
                 @scroll="contentScroll" 
+                :pull-up-load="true"
                 @pullingUp="loadMore">
             <home-swiper :banners="banners"></home-swiper>
             <recommend-view :recommends="recommends"></recommend-view>
@@ -104,7 +104,7 @@ export default {
         },
         loadMore(){
             this.getHomeGoods(this.currentType);
-            // this.$refs.scroll.scroll.refresh()
+            this.$refs.scroll.scroll.refresh()
             
         },
 
@@ -124,10 +124,9 @@ export default {
                 // 把数组加到数组中
                 this.goods[type].list.push(...res.data.list);
                 // 每次请求完，页面+1
-                this.goods[type].page+=1;
+                this.goods[type].page += 1;
                 // 下拉加载更多
-                this.$refs.scroll.finishPullUp();
-                // this.$refs.scroll.scroll.finishPullUp();
+                // this.$refs.scroll.finishPullUp();
             });
         }
     },
