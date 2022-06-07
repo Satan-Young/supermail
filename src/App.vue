@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <router-view></router-view>
+    <!-- keepalived的作用 Home离开时刻记录当前位置 -->
+    <keep-alive>
+      <router-view></router-view>
+    </keep-alive>
    <main-tab-bar></main-tab-bar>
   </div>
 </template>

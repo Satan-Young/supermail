@@ -3,16 +3,26 @@
         <nav-bar class="home-nav">
             <div  slot="center">购物街</div>
         </nav-bar>
+        <tab-control :titles="['流行','新款','精选']"  
+            @tabClick="tabClick" 
+            ref="tabControl1"
+            class="tab-control"
+            v-show="isTabFixed"
+            ></tab-control>
         <scroll class="content" 
                 ref="scroll" 
                 :probe-type="3" 
-                @scroll="contentScroll" 
+                @scroll="contentScroll"
                 :pull-up-load="true"
                 @pullingUp="loadMore">
-            <home-swiper :banners="banners"></home-swiper>
+            <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
             <recommend-view :recommends="recommends"></recommend-view>
             <feature-view></feature-view>
-            <tab-control :titles="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"></tab-control>
+            <tab-control :titles="['流行','新款','精选']"  
+            @tabClick="tabClick" 
+            ref="tabControl2"
+            :class="{fixed:isTabFixed}"
+            ></tab-control>
             <goods-list :goods="showGoods" class="goods-list"></goods-list>
         </scroll>
         <!-- native修饰符：当我们需要监听一个组件的原生事件时，必须给对应的事件加上native修饰符 -->
@@ -34,8 +44,7 @@ import Scroll from 'components/common/scroll/Scroll';
 import BackTop from 'components/content/backTop/BackTop';
 
 import {getHomeMultidata,getHomeGoods} from 'network/home';
-
-
+import { debounce } from 'common/utils'
 
 export default {
     name:'Home',
@@ -60,7 +69,10 @@ export default {
                 'sell':{page:0,list:[]}
             },
             currentType:'pop',
-            isShowBackTop:false
+            isShowBackTop:false,
+            tabOffsetTop:0,
+            isTabFixed:false,
+            saveY:0,
         }
     },
     computed:{
@@ -75,11 +87,26 @@ export default {
         this.getHomeGoods('pop');
         this.getHomeGoods('new');
         this.getHomeGoods('sell');
+       
+    },
+    mounted(){
+        const refresh = debounce(this.$refs.scroll.refresh,50)
+        this.$bus.$on('itemImageLoad',()=>{
+            refresh()
+        });
+    },
+    activated(){
+        this.$refs.scroll.refresh();
+        this.$refs.scroll.scrollTo(0,this.saveY,1)
+    },
+    deactivated(){
+        this.saveY = this.$refs.scroll.scroll.y
     },
     methods:{
         /**
          * 事件监听相关方法
          */
+
         tabClick(index){
            switch (index) {
                case 0:
@@ -94,20 +121,27 @@ export default {
                default:
                    break;
            }
+           this.$refs.tabControl1.currentIndex = index
+           this.$refs.tabControl2.currentIndex = index
         },
         backClick(){
             this.$refs.scroll.scrollTo(0,0,500)
         },
         contentScroll(position){
+            // 判断backTop是否显示
             position.y = -position.y
-            this.isShowBackTop = position.y>1000?true:false
+            this.isShowBackTop = position.y>1000?true:false;
+            // 决定tabControl是否吸顶
+            this.isTabFixed = position.y>this.tabOffsetTop?true:false;
         },
         loadMore(){
             this.getHomeGoods(this.currentType);
-            this.$refs.scroll.scroll.refresh()
-            
+              // 下拉加载更多
+            this.$refs.scroll.finishPullUp()
         },
-
+        swiperImageLoad(){
+             this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
+        },
         /**
          * 网络请求相关方法
          */
@@ -125,8 +159,8 @@ export default {
                 this.goods[type].list.push(...res.data.list);
                 // 每次请求完，页面+1
                 this.goods[type].page += 1;
-                // 下拉加载更多
-                // this.$refs.scroll.finishPullUp();
+
+                
             });
         }
     },
@@ -141,17 +175,14 @@ export default {
 .home-nav{
     background-color: var(--color-tint);
     color: #fff;
-    position: fixed;
+
+    /* position: fixed;
     left: 0px;
     right: 0px;
     top: 0px;
-    z-index: 9;
+    z-index: 9; */
 }
-.tab-control{
-    position: sticky;
-    top: 44px;
-    z-index: 8;
-}
+
 .goods-list{
     margin-bottom: 49px;
 }
@@ -162,5 +193,10 @@ export default {
     bottom: 49px;
     right: 0px;
     left: 0px;
+}
+.tab-control{
+    position: relative;
+    top: -1px;
+    z-index: 9;
 }
 </style>

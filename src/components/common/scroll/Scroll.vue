@@ -17,7 +17,7 @@ export default {
         },
         pullUpLoad:{
             type:Boolean,
-            default:false,
+            default:false
         }
     },
     data(){
@@ -38,20 +38,26 @@ export default {
         this.scroll.on('scroll',(position)=>{
             this.$emit('scroll',position)
         });
-
-        // 3.监听上拉加载更多
-        this.scroll.on('pullingUp',()=>{
-            this.$emit('pullingUp');
-            this.scroll.finishPullUp();
-        })
+        
+        // 3.监听下拉加载更多
+        if (this.pullUpLoad) {
+            this.scroll.on('pullingUp',()=>{
+                // console.log('加载更多1');
+                this.$emit('pullingUp')
+            })
+        }
     },
     methods:{
         scrollTo(x,y,time=300){
-            this.scroll.scrollTo(x,y,time)
+            this.scroll && this.scroll.scrollTo(x,y,time)
         },
-        // finishPullUp(){
-        //     this.scroll.finishPullUp();
-        // }
+        finishPullUp(){
+            console.log(111);
+            this.scroll && this.scroll.finishPullUp()
+        },
+        refresh(){
+           this.scroll && this.scroll.refresh()
+        },
     },
 }
 </script>
