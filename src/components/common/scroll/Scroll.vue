@@ -52,7 +52,6 @@ export default {
             this.scroll && this.scroll.scrollTo(x,y,time)
         },
         finishPullUp(){
-            console.log(111);
             this.scroll && this.scroll.finishPullUp()
         },
         refresh(){
